@@ -12,7 +12,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B9EFFD2F-9660-4963-995F-A5B1FFAE9DF9}</ProjectGuid>
-    <RootNamespace>huffman</RootNamespace>
+    <RootNamespace>encoder</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
