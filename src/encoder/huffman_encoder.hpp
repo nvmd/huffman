@@ -32,11 +32,11 @@ protected:
 	}
 
 	template <typename C>
-	size_t code_length(const C &code)
+	size_t code_length(C code)
 	{
 		unsigned long length = 0;
 
-		if (_BitScanReverse(&length, *c) == 0)
+		if (_BitScanReverse(&length, code) == 0)
 		{
 			length = 0;
 		}
