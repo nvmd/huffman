@@ -10,16 +10,17 @@
 #include <iterator>
 #include <intrin.h>
 
-struct symbol_t
-{
-	int symbol;
-	float probability;
-	int code;
-};
+#define INTERACTIVE_MODE
+// try to avoid codes starting with 0
+//#define TRY_TO_AVOID_ZERO_LEADING_BIT
 
+/// Huffman tree node
 struct huffman_node_t
 {
-	symbol_t symbol;
+	int   symbol;
+	float probability;
+	int   code;
+
 	huffman_node_t *left_symbol;
 	huffman_node_t *right_symbol;
 };
@@ -28,14 +29,8 @@ struct huffman_node_comp_t
 {
 	bool operator()(const huffman_node_t *n1, const huffman_node_t *n2)
 	{
-		return n1->symbol.probability > n2->symbol.probability;
+		return n1->probability > n2->probability;
 	}
-};
-
-struct coded_symbol_t
-{
-	int symbol;
-	int code;
 };
 
 std::string convBase(unsigned long v, long base)
@@ -55,26 +50,68 @@ std::string convBase(unsigned long v, long base)
 	return result;
 }
 
+/// Code nodes of Huffman tree
 template <class T>
 void huffman_coding(huffman_node_t *top, T &map)
 {
 	if (top->left_symbol)
 	{
-		top->left_symbol->symbol.code = (top->symbol.code << 1) + 1;
+		top->left_symbol->code = (top->code << 1) + 1;
 		huffman_coding(top->left_symbol, map);
 	}
 	
 	if (top->right_symbol)
 	{
-		top->right_symbol->symbol.code = (top->symbol.code << 1) + 0;
+		top->right_symbol->code = (top->code << 1) + 0;
 		huffman_coding(top->right_symbol, map);
 	}
 	
 	if (!top->left_symbol && !top->right_symbol)
 	{
-		map[top->symbol.symbol] = top->symbol.code;
-		std::cout << top->symbol.symbol << " " << top->symbol.probability 
-					<< " - " << convBase(top->symbol.code,2) << std::endl;
+		map[top->symbol] = top->code;
+		std::cout << top->symbol << " " << top->probability 
+					<< " - " << convBase(top->code, 2) << std::endl;
+	}
+}
+
+/// Convert symbols (probability vector) to Huffman tree nodes
+template <class P, class Q>
+void convert_prob_vect_to_huffman_nodes(const P &prob_vect, Q &queue)
+{
+	for (size_t i=0; i<prob_vect.size(); ++i)
+	{
+		huffman_node_t *new_node = new huffman_node_t;
+
+		new_node->symbol = i+1;
+		new_node->code = 0;
+		new_node->probability = prob_vect[i];
+		new_node->left_symbol = NULL;
+		new_node->right_symbol = NULL;
+		
+		queue.push(new_node);
+	}
+}
+
+/// Generate huffman tree
+template <class Q>
+void generate_huffman_tree(Q &queue)
+{
+	while (queue.size() > 1)
+	{
+		huffman_node_t *left = queue.top();
+		queue.pop();
+		huffman_node_t *right = queue.top();
+		queue.pop();
+		
+		huffman_node_t *top = new huffman_node_t;
+
+		top->symbol = 0;
+		top->probability = left->probability + right->probability;
+		top->code = 0;
+		top->left_symbol = left;
+		top->right_symbol = right;
+
+		queue.push(top);
 	}
 }
 
@@ -83,52 +120,32 @@ void do_huffman(const P &prob_vect, C &codes)
 {
 	// Convert symbols to huffman tree nodes
 	std::priority_queue<huffman_node_t*, std::vector<huffman_node_t*>, huffman_node_comp_t> huffman_tree;
-	size_t symb_count = 0;
-	for (std::vector<float>::const_iterator i=prob_vect.begin(); i!=prob_vect.end(); ++i)
-	{
-		huffman_node_t *new_node = new huffman_node_t;
-		new_node->symbol.symbol = ++symb_count;
-		new_node->symbol.code = 0;
-		new_node->symbol.probability = *i;
-		new_node->left_symbol = NULL;
-		new_node->right_symbol = NULL;
-		huffman_tree.push(new_node);
-	}
+	convert_prob_vect_to_huffman_nodes(prob_vect, huffman_tree);
 
 	// Generate huffman tree
-	while (huffman_tree.size() > 1)
-	{
-		huffman_node_t *left = huffman_tree.top();
-		huffman_tree.pop();
-		huffman_node_t *right = huffman_tree.top();
-		huffman_tree.pop();
-		
-		huffman_node_t *top = new huffman_node_t;
-		top->symbol.symbol = 0;
-		top->symbol.probability = left->symbol.probability+right->symbol.probability;
-		top->symbol.code = 0;
-		top->left_symbol = left;
-		top->right_symbol = right;
-		huffman_tree.push(top);
-	}
+	generate_huffman_tree(huffman_tree);
 	
-	std::map<int,int> code_map;
+	std::map<int,int> code_map;	// symbol->code map
 	huffman_node_t *top = huffman_tree.top();
-	/*top->symbol.code = 0;
-	huffman_coding(top, code_map);*/
+
+#if !defined(TRY_TO_AVOID_ZERO_LEADING_BIT)
+	top->code = 0;
+	huffman_coding(top, code_map);
+#else
 	if (!top->left_symbol->left_symbol && !top->left_symbol->right_symbol)
 	{
-		top->left_symbol->symbol.code = 0;
-		top->right_symbol->symbol.code = 1;
+		top->left_symbol->code = 0;
+		top->right_symbol->code = 1;
 	}
 	else
 	{
-		top->left_symbol->symbol.code = 1;
-		top->right_symbol->symbol.code = 0;
+		top->left_symbol->code = 1;
+		top->right_symbol->code = 0;
 	}
 
 	huffman_coding(top->left_symbol, code_map);
 	huffman_coding(top->right_symbol, code_map);
+#endif
 
 	for (std::map<int,int>::iterator i=code_map.begin(); i!=code_map.end(); ++i)
 	{
@@ -189,33 +206,45 @@ float coding_cost(const P &prob_vect, const C &codes)
 	return cost;
 }
 
+/// Generate random probability vector
+template <class P>
+void generate_rand_prob_vect(P &prob_vect, size_t vect_size)
+{
+	int prob_sum = 0;
+	srand(time(NULL));
+	
+	for (size_t i=0; i<vect_size; ++i)
+	{
+		int prob = rand()%101;
+		prob_sum += prob;
+		prob_vect[i] = prob;
+	}
+
+	for (size_t i=0; i<vect_size; ++i)
+	{
+		prob_vect[i] /= static_cast<float>(prob_sum);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	size_t symbol_count = 4;
 
+#if defined(INTERACTIVE_MODE)
 	do
 	{
 		std::cout << "Vector length: ";
 		std::cin >> symbol_count;
 		std::cout << std::endl;
 	} while (symbol_count <= 0);
+#endif
 
 	std::vector<float> prob_vect(symbol_count);
 
 #undef _DEBUG
 #ifndef _DEBUG
-	int prob_sum = 0;
-	srand(time(NULL));
-	for (size_t i=0; i<symbol_count; ++i)
-	{
-		int prob = rand()%101;
-		prob_sum += prob;
-		prob_vect[i] = prob;
-	}
-	for (std::vector<float>::iterator i=prob_vect.begin(); i!=prob_vect.end(); ++i)
-	{
-		*i /= static_cast<float>(prob_sum);
-	}
+	// Generate random probability vector
+	generate_rand_prob_vect(prob_vect, symbol_count);
 #else
 
 #define ADD_PROB(symb,prob) \
