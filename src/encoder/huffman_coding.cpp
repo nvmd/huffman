@@ -9,8 +9,11 @@
 #include <map>
 #include <iterator>
 #include <intrin.h>
+#include <tclap/CmdLine.h>
 
-#define INTERACTIVE_MODE
+#include "huffman_encoder.hpp"
+
+//#define INTERACTIVE_MODE
 // try to avoid codes starting with 0
 //#define TRY_TO_AVOID_ZERO_LEADING_BIT
 
@@ -226,6 +229,16 @@ void generate_rand_prob_vect(P &prob_vect, size_t vect_size)
 	}
 }
 
+// for TCLAP to compile with size_t value argument
+namespace TCLAP
+{
+	template<>
+	struct ArgTraits<size_t>
+	{
+		typedef ValueLike ValueCategory;
+	};
+}
+
 int main(int argc, char **argv)
 {
 	size_t symbol_count = 4;
@@ -237,6 +250,28 @@ int main(int argc, char **argv)
 		std::cin >> symbol_count;
 		std::cout << std::endl;
 	} while (symbol_count <= 0);
+#else
+	try
+	{
+		TCLAP::CmdLine cmd("Huffman coding", ' ', "0.0");
+
+		TCLAP::ValueArg<size_t> symbol_count_arg("n", "symbol-count", 
+										"Symbols count (probability vector length)", 
+										true, 
+										symbol_count, 
+										"unsigned integer", 
+										cmd);
+		
+		// parse command line
+		cmd.parse(argc, argv);
+
+		symbol_count = symbol_count_arg.getValue();
+	}
+	catch(TCLAP::ArgException &excp)
+	{
+		std::cerr << "TCLAP Error: " << excp.error();
+		return 1;
+	}
 #endif
 
 	std::vector<float> prob_vect(symbol_count);
@@ -298,6 +333,12 @@ int main(int argc, char **argv)
 	output_vect_bin(std::cout, "V", codes_merged);
 
 	std::cout << "C' = " << coding_cost(prob_vect_merged, codes_merged) <<std::endl;
+
+	// new encoder test
+	std::cout << "NEW ENCODER" << std::endl;
+	huffman_coding_ns::huffman_encoder_t encoder;
+	std::cout << "Weighted path length: " << encoder(prob_vect, codes) << std::endl;
+	
 	
 	return 0;
 }
