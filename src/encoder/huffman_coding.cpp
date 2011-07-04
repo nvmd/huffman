@@ -53,6 +53,12 @@ std::string convBase(unsigned long v, long base)
 	return result;
 }
 
+template <typename C>
+std::string code_to_str(C code)
+{
+	return convBase(code, 2).substr(1);
+}
+
 /// Code nodes of Huffman tree
 template <class T>
 void huffman_coding(huffman_node_t *top, T &map)
@@ -227,16 +233,6 @@ void generate_rand_prob_vect(P &prob_vect, size_t vect_size)
 	{
 		prob_vect[i] /= static_cast<float>(prob_sum);
 	}
-}
-
-// for TCLAP to compile with size_t value argument
-namespace TCLAP
-{
-	template<>
-	struct ArgTraits<size_t>
-	{
-		typedef ValueLike ValueCategory;
-	};
 }
 
 int main(int argc, char **argv)

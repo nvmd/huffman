@@ -69,7 +69,8 @@ protected:
 //#ifdef _DEBUG
 			std::cout //<< "Encoded symbol: " 
 				<< top->symbol << " " << top->probability 
-				<< " - " << convBase(top->code, 2) 
+				<< " - " << convBase(top->code, 2) //including leading "1"
+				<< " - " << code_to_str(top->code) //only code itself
 				<< " [" << code_length(top->code) 
 				<< "]" << std::endl;
 //#endif
@@ -173,6 +174,6 @@ protected:
 	}
 };
 
-};
+}
 
 #endif	// HUFFMAN_CODING_HUFFMAN_ENCODER_HPP_
