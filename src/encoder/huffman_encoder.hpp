@@ -8,7 +8,7 @@
 #include <iostream>
 #include <intrin.h>	// for _BitScanReverse
 
-namespace huffman_coding_ns
+namespace huffman_coding
 {
 
 class huffman_encoder_t
