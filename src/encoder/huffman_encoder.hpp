@@ -32,7 +32,7 @@ protected:
 	struct huffman_node_t
 	{
 		int   symbol;
-		float probability;
+		float weight;
 		int   code;
 
 		huffman_node_t *left_symbol;
@@ -43,7 +43,7 @@ protected:
 	{
 		bool operator()(const huffman_node_t *n1, const huffman_node_t *n2)
 		{
-			return n1->probability > n2->probability;
+			return n1->weight > n2->weight;
 		}
 	};
 
@@ -68,7 +68,7 @@ protected:
 			code[top->symbol] = top->code;
 //#ifdef _DEBUG
 			std::cout //<< "Encoded symbol: " 
-				<< top->symbol << " " << top->probability 
+				<< top->symbol << " " << top->weight 
 				<< " - " << convBase(top->code, 2) //including leading "1"
 				<< " - " << code_to_str(top->code) //only code itself
 				<< " [" << code_length(top->code) 
@@ -87,7 +87,7 @@ protected:
 
 			new_node->symbol = i;
 			new_node->code = 0;
-			new_node->probability = weights[i];
+			new_node->weight = weights[i];
 			new_node->left_symbol = NULL;
 			new_node->right_symbol = NULL;
 		
@@ -109,7 +109,7 @@ protected:
 			huffman_node_t *top = new huffman_node_t;
 
 			top->symbol = 0;
-			top->probability = left->probability + right->probability;
+			top->weight = left->weight + right->weight;
 			top->code = 0;
 			top->left_symbol = left;
 			top->right_symbol = right;
