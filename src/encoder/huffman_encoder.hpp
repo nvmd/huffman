@@ -3,14 +3,17 @@
 #define HUFFMAN_CODING_HUFFMAN_ENCODER_HPP_
 
 #include <cassert>
+#include <cstdint>
 #include <queue>
 #include <vector>
+#include <map>
 #include <iostream>
 #include <intrin.h>	// for _BitScanReverse
 
 namespace huffman_coding
 {
 
+template <typename S = uint8_t, typename C = uint32_t>
 class huffman_encoder_t
 {
 public:
@@ -26,14 +29,17 @@ public:
 		return weighted_path_length(weights, code);
 	}
 
+	typedef S symbol_t;
+	typedef C symbol_code_t;
+
 protected:
 
 	/// Huffman tree node
 	struct huffman_node_t
 	{
-		int   symbol;
+		symbol_t   symbol;
 		float weight;
-		int   code;
+		symbol_code_t   code;
 
 		huffman_node_t *left_symbol;
 		huffman_node_t *right_symbol;
@@ -93,6 +99,23 @@ protected:
 		
 			queue.push(new_node);
 		}
+	}
+
+	template <class Q>
+	void weights_to_huffman_nodes(const std::map<symbol_t,float> &weights, Q &queue)
+	{
+		std::for_each(weights.begin(), weights.end(), 
+			[&queue](const std::pair<symbol_t,float> &symbol_weight){
+			huffman_node_t *new_node = new huffman_node_t;
+
+			new_node->symbol = symbol_weight.first;
+			new_node->code = 0;
+			new_node->weight = symbol_weight.second;
+			new_node->left_symbol = NULL;
+			new_node->right_symbol = NULL;
+		
+			queue.push(new_node);
+		});
 	}
 
 	/// Generate huffman tree
@@ -169,6 +192,24 @@ protected:
 		{
 			wlength += weights[i] * code_length(code[i]);
 		}
+
+		return wlength;
+	}
+
+	float weighted_path_length(const std::map<symbol_t,float> &weights, 
+								const std::map<symbol_t,symbol_code_t> &code)
+	{
+		assert(weights.size() == code.size());
+
+		float wlength = 0;
+		
+		std::for_each(weights.begin(), weights.end(), 
+			[&wlength, &code, this](const std::pair<symbol_t,float> &symbol_weight){
+			// cant' write just
+			// wlength += symbol_weight.second * code_length(code[symbol_weight.first]);
+			// because std::map::operator[] is not const, while we want code to be const in this method
+			wlength += symbol_weight.second * code_length(code.find(symbol_weight.first)->second);
+		});
 
 		return wlength;
 	}

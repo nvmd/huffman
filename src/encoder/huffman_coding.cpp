@@ -153,7 +153,7 @@ int main(int argc, char **argv)
 	ADD_PROB(4,0.1);
 #endif
 
-	huffman_coding::huffman_encoder_t encoder;
+	huffman_coding::huffman_encoder_t<uint8_t> encoder;
 	float weighted_path_length = 0;
 
 	std::cout << std::fixed;
@@ -192,6 +192,17 @@ int main(int argc, char **argv)
 	output_vect_bin(std::cout, "V", code_merged);
 
 	std::cout << "C' = " << weighted_path_length <<std::endl;
+
+	typedef huffman_coding::huffman_encoder_t<uint32_t> int32_encoder_t;
+	int32_encoder_t int32_encoder;
+	std::map<int32_encoder_t::symbol_t,float> prob_map;
+	prob_map[1] = 0.3;
+	prob_map[400] = 0.1;
+	prob_map[34] = 0.3;
+	prob_map[42] = 0.1;
+	prob_map[6543] = 0.2;
+	std::map<int32_encoder_t::symbol_t,int32_encoder_t::symbol_code_t> code_map;
+	weighted_path_length = int32_encoder(prob_map, code_map);
 
 	return 0;
 }
