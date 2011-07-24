@@ -4,10 +4,12 @@
 
 #include <cassert>
 #include <cstdint>
+#include <iostream>
 #include <queue>
 #include <vector>
 #include <map>
-#include <iostream>
+#include <algorithm>
+
 #include <intrin.h>	// for _BitScanReverse
 
 namespace huffman_coding

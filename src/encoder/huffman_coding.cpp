@@ -1,14 +1,11 @@
-#include <vector>
-#include <queue>
-#include <iostream>
-#include <iomanip>
-#include <algorithm>
 #include <cstdlib>
 #include <ctime>
+#include <iostream>
 #include <string>
+#include <vector>
 #include <map>
 #include <iterator>
-#include <intrin.h>
+
 #include <tclap/CmdLine.h>
 
 #include "huffman_encoder.hpp"
