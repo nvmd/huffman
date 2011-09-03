@@ -217,6 +217,9 @@ protected:
 	}
 };
 
+typedef huffman_encoder_t<uint8_t> int8_encoder_t;
+typedef huffman_encoder_t<uint32_t> int32_encoder_t;
+
 }
 
 #endif	// HUFFMAN_CODING_HUFFMAN_ENCODER_HPP_
